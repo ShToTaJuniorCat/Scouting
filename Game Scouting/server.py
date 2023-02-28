@@ -1,0 +1,180 @@
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+import json
+from os.path import abspath
+from game import Game
+from winsound import Beep
+
+cred = credentials.Certificate('./credentials.json')
+app = firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://everscout-3c93c.firebaseio.com/'})
+print("Connection OK")
+update_team_analytics_ref = db.reference('listeners/update_team_analytics')
+
+GAME_NUM_START = "M"
+
+def update_games_analytics(teamID,data =None):
+	games_ref = db.reference(f'teams/{teamID}/games')
+	if data is None:
+		data = games_ref.get()
+		if data is None:
+			print('No information on this team')
+			return
+	for key in data.keys():
+		if (key is None):
+			continue
+		game_data = data[key]
+		try:
+			game_data['points']
+		except Exception as err:
+			print(f'updating game #{key[1:]}')
+			#load the  game_data into the dataclass and get a
+			#reference to the game in order to add statistics
+			game_object= Game(game_data)
+			game_ref = games_ref.child(f'{key}')
+			#
+			game_ref.child('points').set(game_object.points())
+			game_ref.child('score_percentage').set(game_object.score_percentage())
+		
+def update_last_game(teamID,data=None):
+	if data is None:
+		games_ref = db.reference(f'teams/{teamID}/games')
+		data = games_ref.get()
+		if data is None:
+			print('No information on this team')
+			return
+	lastgame = 0
+	#find the team's last game
+	for key in data.keys():
+		if (key is None):
+			continue
+		game_number = int(key[1:])  #remove the G
+		if (game_number> lastgame):
+			lastgame = game_number
+		
+	game_data = data[f'{GAME_NUM_START}{lastgame}']
+	print(f'updating last game of team #{teamID} to be game #{lastgame}')
+	#load the  game_data into the dataclass and get a
+	#reference to the game in order to add statistics
+	game_object= Game(game_data)
+	last_game_ref = db.reference(f'teams/{teamID}/last_game')
+	#
+	last_game_ref.child('comment').set(game_object.comment)
+	last_game_ref.child('climbed').set(game_object.climbed)
+	last_game_ref.child('points').set(game_object.points())
+	last_game_ref.child('score_percentage').set(game_object.score_percentage())
+	
+def update_team_stats(teamID, data=None):
+	if data is None:
+		games_ref = db.reference(f'teams/{teamID}/games')
+		data = games_ref.get()
+		if data is None:
+			print('No information on this team')
+			return
+	team_stats_ref = db.reference(f'teams/{teamID}/stats')
+	sum_percentage = 0
+	sum_points = 0
+	count = 0
+	for key in data.keys():
+		if key is None:
+			continue
+		count += 1
+		sum_points += int(data[key]['points'])
+		sum_percentage += int(data[key]['score_percentage'])
+	avg_points = sum_points/count
+	avg_percentage = sum_percentage / count
+	team_stats_ref.child('avg_points').set(avg_points)
+	team_stats_ref.child('score_percentage').set(avg_percentage)
+
+
+def update_team_analytics(teamID):
+	games_ref = db.reference(f'teams/{teamID}/games')
+	games = games_ref.get()
+	if games is None:
+		print(f'No information on team #{teamID}')
+	print(f'Updating team #{teamID}')
+	update_games_analytics(teamID, games)
+	update_last_game(teamID,games)
+	games = games_ref.get()
+	if games is None:
+		print(f'error fetching data#{teamID}')
+	update_team_stats(teamID, games)
+	
+def update_team_analytics_listener(event):
+	if (event == None):
+		return
+	if (event.data == None):
+		return
+	if (event.data == '0'):
+		return
+	if (event.data == ''):
+		return
+	if (event.data == '-1'):
+		ref = db.reference('teams')
+		data = ref.get()
+		for team in data.keys():
+			update_team_analytics(int(team))
+	else:
+		print(f'Updating analytics for team #{event.data}:...')
+		
+		update_team_analytics(int(event.data))
+
+	print('Update completed')
+	update_team_analytics_ref.set('0')
+
+
+##def add_custom_stats(teamKey,eventKey):
+##        # get all team games in current event
+##        games = db.reference(f"teams/{teamKey}/events/{eventKey}/gms").get()
+##	
+##        # calculate stats(whatever you want/strategy team requests)
+##        new_stats = {}
+##        data = ""
+##        while True:
+##                data = input("Enter data formatted as key,value:\n")
+##                if data == "stop":
+##                        break
+##
+##                
+##                try:
+##                        new_stats[data.split(",")[0]] = data.split(",")[1]
+##                except IndexError:
+##                        pass
+##        
+##        # upload to firebase - it will be displayed for the users
+##        db.reference(f"teams/{teamKey}/events/{eventKey}/custom").set(new_stats)
+##
+##        pass
+##
+##
+### https://firebase.google.com/static/docs/reference/admin/python/firebase_admin.db#event
+### event.data
+### event.path
+### event.event_type
+##def handleStatsRequest(event):
+##        if event.event_type == "put" and event.path =="/":
+##                return
+##        if event.event_type !="put":
+##                return
+##
+##        # parse eventKey and teamKey from the event
+##        eventKey = event.data
+##
+##        if eventKey is None:
+##                return
+##        
+##        teamKey = event.path.replace("/","")
+##
+##        Beep(2500, 1000)
+##        print(f"Data for team #{teamKey} requested. Message:\n{eventKey}")
+##        
+##        # reply to the request
+##        add_custom_stats(teamKey,eventKey)
+##        # delete the request for team data update
+##        db.reference(f"listeners/update_team_stats/{teamKey}").delete()
+##
+##
+##db.reference("listeners/update_team_stats/").listen(handleStatsRequest)
+
+update_team_analytics_ref.listen(update_team_analytics_listener)
