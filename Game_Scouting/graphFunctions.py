@@ -32,10 +32,10 @@ def graph_total_collected_per_game(team_id, all_games, show_graphs):
     game_results = []
     for game in all_games:
         json = all_games[game]
-        auto_collected_pieces = json["au_Collected pieces count"]
+        auto_collected_pieces = json["au_Collected pieces"]
 
-        teleop_floor_collected_pieces = json["te_Pieces Collected from floor "]
-        teleop_shelf_collected_pieces = json["te_Pieces Collected from floor "]
+        teleop_floor_collected_pieces = json["te_Pieces collected from floor"]
+        teleop_shelf_collected_pieces = json["te_Pieces collected from floor"]
         
         total_pieces = auto_collected_pieces + teleop_floor_collected_pieces + teleop_shelf_collected_pieces
         
@@ -53,15 +53,15 @@ def graph_accuracy_tele_per_game(team_id, all_games, show_graphs):
     for game in all_games:
         json = all_games[game]
         
-        teleop_floor_pieces_collected = json['te_Pieces Collected from floor ']
-        teleop_shelf_pieces_collected = json['te_Pieces Collected from shelf']
+        teleop_floor_pieces_collected = json['te_Pieces collected from floor']
+        teleop_shelf_pieces_collected = json['te_Pieces collected from shelf']
 
         teleop_collected_total = teleop_floor_pieces_collected + teleop_shelf_pieces_collected
 
         
-        teleop_first_level_score_count = json['te_First level pieces score']
-        teleop_second_level_score_count = json['te_Second level pieces score ']
-        teleop_third_level_score_count = json['te_third level pieces score']
+        teleop_first_level_score_count = json['te_First level pieces scored']
+        teleop_second_level_score_count = json['te_Second level pieces scored']
+        teleop_third_level_score_count = json['te_Third level pieces scored']
         
         successful_scored = teleop_first_level_score_count + teleop_second_level_score_count + teleop_third_level_score_count
         
@@ -82,7 +82,7 @@ def graph_accuracy_auto_per_game(team_id, current_event):
         game_json = games[game]
 
         # Get total pieces collected during auto 
-        auto_collected_total = game_json['au_Collected pieces count']
+        auto_collected_total = game_json['au_Collected pieces']
 
         auto_first_level_scored = game_json["au_First level pieces scored"]
         auto_second_level_scored = game_json["au_Second level pieces scored"]

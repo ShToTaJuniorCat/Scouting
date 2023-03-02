@@ -1,23 +1,28 @@
 import csv
+from pyperclip import copy
+import update_app
 
-with open(f"C:/Users/USER/AppData/Local/Programs/Python/Python310/desktop_client/pit scouting/data.csv", encoding="utf-8") as file:
+with open(f"data.csv", encoding="utf-8") as file:
     handle = csv.reader(file)
+
     data = list(handle)
 
 
 quest = data[0]
-excluded_questions = []
+excluded_questions = ["Timestamp"]
+team_number = input("Team number: #")
+info = ""
 
 for row in data:
-    if row[1] == "מספר קבוצה":
+    if row[1] != team_number:
         continue
 
     for i, col in enumerate(row):
         if quest[i] in excluded_questions:
             continue
         
-        print(quest[i])
-        print(col)
-        print()
+        a = f"*{quest[i]}:* {col}"
+        print(a)
+        info += a + "\n"
 
-    print("\n\n\n\n\n")
+copy(info)

@@ -124,57 +124,57 @@ def update_team_analytics_listener(event):
 	update_team_analytics_ref.set('0')
 
 
-##def add_custom_stats(teamKey,eventKey):
-##        # get all team games in current event
-##        games = db.reference(f"teams/{teamKey}/events/{eventKey}/gms").get()
-##	
-##        # calculate stats(whatever you want/strategy team requests)
-##        new_stats = {}
-##        data = ""
-##        while True:
-##                data = input("Enter data formatted as key,value:\n")
-##                if data == "stop":
-##                        break
-##
-##                
-##                try:
-##                        new_stats[data.split(",")[0]] = data.split(",")[1]
-##                except IndexError:
-##                        pass
-##        
-##        # upload to firebase - it will be displayed for the users
-##        db.reference(f"teams/{teamKey}/events/{eventKey}/custom").set(new_stats)
-##
-##        pass
-##
-##
-### https://firebase.google.com/static/docs/reference/admin/python/firebase_admin.db#event
-### event.data
-### event.path
-### event.event_type
-##def handleStatsRequest(event):
-##        if event.event_type == "put" and event.path =="/":
-##                return
-##        if event.event_type !="put":
-##                return
-##
-##        # parse eventKey and teamKey from the event
-##        eventKey = event.data
-##
-##        if eventKey is None:
-##                return
-##        
-##        teamKey = event.path.replace("/","")
-##
-##        Beep(2500, 1000)
-##        print(f"Data for team #{teamKey} requested. Message:\n{eventKey}")
-##        
-##        # reply to the request
-##        add_custom_stats(teamKey,eventKey)
-##        # delete the request for team data update
-##        db.reference(f"listeners/update_team_stats/{teamKey}").delete()
-##
-##
-##db.reference("listeners/update_team_stats/").listen(handleStatsRequest)
+def add_custom_stats(teamKey,eventKey):
+        # get all team games in current event
+        games = db.reference(f"teams/{teamKey}/events/{eventKey}/gms").get()
+	
+        # calculate stats(whatever you want/strategy team requests)
+        new_stats = {}
+        data = ""
+        while True:
+                data = input("Enter data formatted as key,value:\n")
+                if data == "stop":
+                        break
+
+                
+                try:
+                        new_stats[data.split(",")[0]] = data.split(",")[1]
+                except IndexError:
+                        pass
+        
+        # upload to firebase - it will be displayed for the users
+        db.reference(f"teams/{teamKey}/events/{eventKey}/custom").set(new_stats)
+
+        pass
+
+
+ https://firebase.google.com/static/docs/reference/admin/python/firebase_admin.db#event
+ event.data
+ event.path
+ event.event_type
+def handleStatsRequest(event):
+        if event.event_type == "put" and event.path =="/":
+                return
+        if event.event_type !="put":
+                return
+
+        # parse eventKey and teamKey from the event
+        eventKey = event.data
+
+        if eventKey is None:
+                return
+        
+        teamKey = event.path.replace("/","")
+
+        Beep(2500, 1000)
+        print(f"Data for team #{teamKey} requested. Message:\n{eventKey}")
+        
+        # reply to the request
+        add_custom_stats(teamKey,eventKey)
+        # delete the request for team data update
+        db.reference(f"listeners/update_team_stats/{teamKey}").delete()
+
+
+db.reference("listeners/update_team_stats/").listen(handleStatsRequest)
 
 update_team_analytics_ref.listen(update_team_analytics_listener)
